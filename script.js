@@ -25,9 +25,24 @@ if (navigator.geolocation) {
             attribution: '&copy; <a href="https://www.google.com/maps">Google Maps</a>',
         }).addTo(map);
 
-        L.marker(coords).addTo(map)
-        .bindPopup('A pretty CSS popup.<br> Easily customizable.')
-        .openPopup();
+        // Adding click event to the popup.
+        map.on('click', function (mapEvent) {
+            // console.log(mapEvent);
+            const {lat, lng} = mapEvent.latlng;
+
+            L.marker([lat, lng]).addTo(map)
+            .bindPopup(
+                L.popup({
+                    maxWidth: 250,
+                    minWidth: 100,
+                    autoClose: false,
+                    closeOnClick: false,
+                    className: 'running-popup' 
+                })
+            )
+            .setPopupContent('Workout')
+            .openPopup();
+        });
     }, function() {
         alert('Could not find your location!');
     })
