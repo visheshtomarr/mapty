@@ -57,6 +57,7 @@ class App {
     #map;
     #mapEvent;
     #workouts = [];
+    #mapZoomLevel = 13;
     constructor() {
         this._getPosition();
         // Event handler to submit the form.
@@ -64,6 +65,8 @@ class App {
 
         // Event handler to detect change in input type.
         inputType.addEventListener('change', this._toggleElevationField);
+
+        containerWorkouts.addEventListener('click', this._moveMapToPopup.bind(this));
     }
 
     // Getting the latitudes and longitudes of our current location
@@ -80,7 +83,7 @@ class App {
         const { latitude } = position.coords;
         const { longitude } = position.coords;
         const coords = [latitude, longitude];
-        this.#map = L.map('map').setView(coords, 13);
+        this.#map = L.map('map').setView(coords, this.#mapZoomLevel);
 
         L.tileLayer('https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}&key=YOUR_GOOGLE_API_KEY', {
             attribution: '&copy; <a href="https://www.google.com/maps">Google Maps</a>',
@@ -229,6 +232,26 @@ class App {
         }
 
         form.insertAdjacentHTML('afterend', html);
+    }
+
+    _moveMapToPopup(e) {
+        const workoutEl = e.target.closest('.workout');
+        console.log(workoutEl);
+        
+        // Guard clause
+        if (!workoutEl) return;
+
+        // Finding the correct workout from the 'workouts' list.
+        const workout = this
+            .#workouts
+            .find(workout => workout.id === workoutEl.dataset.id);
+        
+        this.#map.setView(workout.coords, this.#mapZoomLevel, {
+            animate: true,
+            pan: {
+                duration: 1
+            }
+        })
     }
 }
 
