@@ -11,42 +11,61 @@ const inputDuration = document.querySelector('.form__input--duration');
 const inputCadence = document.querySelector('.form__input--cadence');
 const inputElevation = document.querySelector('.form__input--elevation');
 
+class App {
+    #map;
+    #mapEvent;
+    constructor() {
+        this._getPosition();
+        // Event handler to submit the form.
+        form.addEventListener('submit', this._newWorkout.bind(this));
 
-let map, mapEvent;
+        // Event handler to detect change in input type.
+        inputType.addEventListener('change', this._toggleElevationField);
+    }
 
-// Getting the latitudes and longitudes of our current location
-// through the geolocation API.
-if (navigator.geolocation) {
-    navigator.geolocation.getCurrentPosition(position => {
-        const {latitude} = position.coords;
-        const {longitude} = position.coords;
-        // console.log(`https://www.google.com/maps/@${latitude},${longitude}`);
+    // Getting the latitudes and longitudes of our current location
+    // through the geolocation API.
+    _getPosition() {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(this._loadMap.bind(this), () => {
+                alert('Could not find your location!');
+            });
+        }
+    }
+
+    _loadMap(position) {
+        const { latitude } = position.coords;
+        const { longitude } = position.coords;
         const coords = [latitude, longitude];
-        map = L.map('map').setView(coords, 13);
+        this.#map = L.map('map').setView(coords, 13);
 
         L.tileLayer('https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}&key=YOUR_GOOGLE_API_KEY', {
             attribution: '&copy; <a href="https://www.google.com/maps">Google Maps</a>',
-        }).addTo(map);
+        }).addTo(this.#map);
 
-        // Adding click event to the map.
-        map.on('click', function (mapE) {
-            mapEvent = mapE;
-            form.classList.remove('hidden');
-            inputDistance.focus();
-        });
-    }, () => {
-        alert('Could not find your location!');
-    });
+        // Handling clicks on map.
+        this.#map.on('click', this._showForm.bind(this));
+    }
 
-    // Event handler to submit the form.
-    form.addEventListener('submit', (e) => {
+    _showForm(mapE) {
+        this.#mapEvent = mapE;
+        form.classList.remove('hidden');
+        inputDistance.focus();
+    }
+
+    _toggleElevationField() {
+        inputCadence.closest('.form__row').classList.toggle('form__row--hidden');
+        inputElevation.closest('.form__row').classList.toggle('form__row--hidden');
+    }
+
+    _newWorkout(e) {
         e.preventDefault();
 
         // Clear input fields of our form.
         inputDistance.value = inputCadence.value = inputDuration.value = inputElevation.value = '';
 
-        const { lat, lng } = mapEvent.latlng;
-        L.marker([lat, lng]).addTo(map)
+        const { lat, lng } = this.#mapEvent.latlng;
+        L.marker([lat, lng]).addTo(this.#map)
             .bindPopup(
                 L.popup({
                     maxWidth: 250,
@@ -58,11 +77,7 @@ if (navigator.geolocation) {
             )
             .setPopupContent('Workout')
             .openPopup();
-    });
-
-    inputType.addEventListener('change', () => {
-        inputCadence.closest('.form__row').classList.toggle('form__row--hidden');
-        inputElevation.closest('.form__row').classList.toggle('form__row--hidden');
-    });
-
+    }
 }
+
+const app = new App();
